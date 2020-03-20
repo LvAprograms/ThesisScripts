@@ -1,4 +1,5 @@
 from znode import *
+from find_x import *
 import h5py as h5
 import numpy as np
 
@@ -12,8 +13,7 @@ L_lm = 150e3            # lithosphere thickness
 L_m = L_lc              # moho depth
 
 # Read the data
-f = h5.File('E:/ThesisData/AC/AC050.gzip.h5', 'r')
-# print(list(f.keys()))
+f = h5.File('E:/ThesisData/AQ/AQ001.gzip.h5', 'r')
 dset = f['NodeGroup']
 print(list(dset.keys()))
 rho_tmp = dset['ro']
@@ -45,7 +45,7 @@ with open("rockprops.txt", 'r') as rheology:
 
 materials = {"SA": Material("sticky_air_approximation", database),
              "UC": Material("dalzilio2018_wet_quartzite", database),
-             "LC": Material("dalzilio2018_mafic_granulite", database),
+             "LC": Material("dalzilio2018_wet_quartzite28", database),
              "LM": Material("lithospheric_mantle_dry_olivin", database),
              "AM": Material("astenospheric_mantle_dry_olivin",database)}
 
@@ -85,7 +85,7 @@ for i in range(1, nz):
 vars = [tk_tmp, pr_tmp, rho_tmp, np.log10(eta_tmp)]
 xlabels = ["Temperature [K]", "Pressure [Pa]", "Density [kg/m3]", r'log$_{10}(\eta_{eff})$']
 fig, axes = plt.subplots(2,2)
-plt.suptitle("Visualisation parameters at x-node {}".format(COL))
+plt.suptitle("Visualisation parameters at x-node {}".format(find_x(COL)))
 for i, var in enumerate(vars):
     var = var.transpose()
     axes.flatten()[i].plot(var[:, COL], [n.z/1000 for n in nodes])
@@ -94,7 +94,7 @@ for i, var in enumerate(vars):
     axes.flatten()[i].grid(b=True)
     axes.flatten()[i].set_xlabel(xlabels[i])
     axes.flatten()[i].set_ylabel("Depth [km]")
-    axes.flatten()[i].set_ylim([200, 20])
+    axes.flatten()[i].set_ylim([60, 20])
     # axes.flatten()[i].colorbar()
 # plt.show()
 axes.flatten()[2].set_xlim([2700, 3550])
@@ -121,7 +121,7 @@ strprof.draw_layering()
 strprof.draw_all()
 # strprof.add_profile(strainrate=1E-16)
 # strprof.add_profile(strainrate=1E-15)
-plt.title("vertical strength profile through x-node {}".format(COL))
+plt.title("vertical strength profile through x = {} km".format(find_x(COL)))
 
 plt.show()
 
