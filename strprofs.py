@@ -3,17 +3,17 @@ from find_x import *
 import h5py as h5
 import numpy as np
 
-COL = 50                # where on the x axis do we want a strength profile
+COL = 20                # where on the x axis do we want a strength profile
 Lz = 700e3              # Depth of model, m
 nz = 436                # amount of nodes
 L_sticky = 20e3         # Thickness of sticky air
 L_uc = L_sticky + 20e3  # upper crustal bottom depth
 L_lc = L_uc + 15e3      # lower crustal bottom depth
-L_lm = 150e3            # lithosphere thickness
+L_lm = 100e3            # lithosphere thickness
 L_m = L_lc              # moho depth
 
 # Read the data
-f = h5.File('E:/ThesisData/AQ/AQ001.gzip.h5', 'r')
+f = h5.File('E:/ThesisData/AC/AC001.gzip.h5', 'r')
 dset = f['NodeGroup']
 print(list(dset.keys()))
 rho_tmp = dset['ro']
@@ -45,7 +45,7 @@ with open("rockprops.txt", 'r') as rheology:
 
 materials = {"SA": Material("sticky_air_approximation", database),
              "UC": Material("dalzilio2018_wet_quartzite", database),
-             "LC": Material("dalzilio2018_wet_quartzite28", database),
+             "LC": Material("dalzilio2018_mafic_granulite", database),
              "LM": Material("lithospheric_mantle_dry_olivin", database),
              "AM": Material("astenospheric_mantle_dry_olivin",database)}
 
@@ -94,7 +94,7 @@ for i, var in enumerate(vars):
     axes.flatten()[i].grid(b=True)
     axes.flatten()[i].set_xlabel(xlabels[i])
     axes.flatten()[i].set_ylabel("Depth [km]")
-    axes.flatten()[i].set_ylim([60, 20])
+    axes.flatten()[i].set_ylim([250, 0])
     # axes.flatten()[i].colorbar()
 # plt.show()
 axes.flatten()[2].set_xlim([2700, 3550])
@@ -116,7 +116,7 @@ for node in nodes:
     node.P = pr_tmp.transpose()[node.index, COL]
     node.T = tk_tmp.transpose()[node.index, COL]
 # axes[1,1].plot(pr_tmp.transpose()[:, COL], [n.z for n in nodes])
-strprof = StrengthProfile(nodes, materials, [1E-14, 1E-16])
+strprof = StrengthProfile(nodes, materials, [1E-14, 1E-16], log=True)
 strprof.draw_layering()
 strprof.draw_all()
 # strprof.add_profile(strainrate=1E-16)
