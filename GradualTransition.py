@@ -43,7 +43,7 @@ class Parabola(object):
         self.a2 = 0  # y-intercept of the derivative of th parabola
         self.m = self.n
         self.fig, self.ax = plt.subplots()
-        self.maxM = int(floor(self.Xe - self.Xs) / (self.b1 - self.b3)) # set a limit to the width of the transition zone
+        self.maxM = int(floor(self.Xe - self.Xs) / (self.b1 - self.b3)) + 10 # set a limit to the width of the transition zone
         log.info("Maximum m value allowed is {}".format(self.maxM))
         self.formula = ""
 
@@ -56,7 +56,7 @@ class Parabola(object):
     def discriminant(self):
         return self.b2 ** 2 - 4 * self.a2 * self.c
 
-    def plot(self, where=range(100), dxdn=False):
+    def plot(self, where=range(100), dxdn=False, linetype= '--'):
         x = where
         y = []
         if dxdn:
@@ -65,7 +65,7 @@ class Parabola(object):
         else:
             for i in where:
                 y.append(self.calc(i))
-        self.ax.plot(x,y,'--', label=self.formula)
+        self.ax.plot(x,y, linetype, marker='^', label=self.formula)
 
     def plot_constraints(self):
         x = []
@@ -75,10 +75,10 @@ class Parabola(object):
             y.append(self.a1 + self.b1 * i)
         self.ax.plot(x,y,'r-',label="x1(N) = {} + {}N".format(self.a1, self.b1))
         self.ax.plot([self.n + self.maxM, self.n + self.maxM], [0, 3000],'m--', label='Maximum allowed m')
-        max_a3 = self.Xe - self.b3 * (self.n + self.maxM)
-        self.ax.plot([self.n, self.n + self.maxM], [max_a3  + self.b3 * self.n,
-                                                    max_a3 + self.b3 * (self.n + self.maxM)],
-                                                    label='a3 + b3m for max m')
+        # max_a3 = self.Xe - self.b3 * (self.n + self.maxM)
+        # self.ax.plot([self.n, self.n + self.maxM], [max_a3  + self.b3 * self.n,
+        #                                             max_a3 + self.b3 * (self.n + self.maxM)],
+        #                                             label='a3 + b3m for max m')
 
         plt.pause(0.001)
 
@@ -114,13 +114,44 @@ class Parabola(object):
                 self.a3 = self.Xe - self.b3 * m
                 # self.ax.plot([self.n, self.n + 50], [self.a3 + self.b3 * self.n, self.a3 + self.b3 * (self.n+50)], 'k--')
         best_m = self.n + residuals.index(min(residuals))
+        self.m = best_m
         self.parameters_from_m(best_m)
         self.plot(where=range(1,150))
         print("The minimum residual of {} is found for m = {}".format(min(residuals), best_m))
+        return best_m
 
-X2 = Parabola(n=90, Xs=900, Xe=1000)
-X2.fit()
+    def write_results(self):
+        with open('output.txt', 'w') as f:
+            f.write("node\tXnode\tchange\n")
+            for m in range(self.n, self.m):
+                f.write("{}\t{}\t{}\n".format(m, self.calc(m), self.calc(m) - self.calc(m-1)))
+
+    def plot_output(self):
+        with open('output.txt', 'r') as f:
+            data = f.readlines()
+            x = range(self.n, self.m)
+            y = [line.split()[1] for line in data]
+            del y[0]
+            plt.figure()
+            plt.plot(x,[float(val) for val in y],'o--')
+            plt.xlim([self.n, self.m])
+            plt.ylim([self.Xs, self.Xe])
+
+with open("input.txt", 'r') as f:
+    counter = 0
+    for line in f:
+        if counter > 0:
+            # print(line)
+            IN = [int(val) for val in line.split()]
+            break
+        else:
+            counter += 1
+
+X2 = Parabola(n=IN[0], Xs=IN[1], Xe=IN[2], b1=IN[3], b3=IN[4], a1=IN[5])
+best_m = X2.fit()
 X2.plot_constraints()
+X2.plot(where=range(X2.n, best_m),linetype='-')
+X2.write_results()
 
 plt.xlim([0, 200])
 plt.ylim([0, 1200])
@@ -131,4 +162,7 @@ plt.xlabel("Node number")
 plt.ylabel("X coordinate [km]")
 plt.grid(b=True)
 plt.legend()
+X2.plot_output()
+
 plt.show()
+
