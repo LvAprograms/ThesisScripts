@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 
 class Znode(object):
     def __init__(self, i, z):
@@ -9,6 +10,7 @@ class Znode(object):
         self.T = 0              # Temperature at this node
         self.eta_eff = 0        # effective viscosity read from hdf5 file
         self.P = 0              # Pressure read from hdf5 file
+        self.k = 0
 
     def calc_T(self, Ta, L):
         """Calculates initial geotherm"""
@@ -26,6 +28,10 @@ class Znode(object):
         a = 1 + x.alpha * (self.T - self.T0)
         b = 1 + x.beta/100 * (self.P/1E6 - 0.1)
         return x.rho_0 * (b/a)
+
+    def calc_k(self):
+        x = self.material
+        return (x.k0 + x.kz / (self.T + 77)) * (np.exp(x.kP * self.P/1E6))
 
 
 class Material(object):
@@ -65,8 +71,9 @@ class Material(object):
 
 
 class StrengthProfile(object):
-    def __init__(self, Zdata:list, materials, strainratelists):
+    def __init__(self, Zdata:list, materials, strainratelists, log=False):
         self.materials = materials          # Layering used
+        self.log = log
         self.nodes = Zdata                  # Nodes
         self.z = [n.z for n in self.nodes]  # depth vector in m
         self.sigma_britmax = []             # yield strength for mu_max
@@ -77,6 +84,7 @@ class StrengthProfile(object):
         self.strainrates = strainratelists  # input the strainrates for which the viscous strength is calculated
         self.fig, self.ax = plt.subplots()  # Figure to hold the strength profile
         self.calc_rho()
+        self.calc_k()
         self.calc_brittle()
         # self.ax.invert_yaxis()
 
@@ -85,6 +93,10 @@ class StrengthProfile(object):
         for node in self.nodes:
             # mutot += node.material.mu_max
             self.sigma_britmax.append(node.material.Cmax + node.material.mu_max * node.P) # TODO: Where is Pf/Ps?
+            # if node.P <= 200e6:
+            #     self.sigma_britmax.append(node.material.Cmax + 0.85 * node.P)
+            # else:
+            #     self.sigma_britmax.append(node.material.Cmax + 0.60 * node.P)
             self.sigma_britmin.append(node.material.Cmax + node.material.mu_min * node.P)
         # print(mutot / len(self.nodes)) # Check average (maximum) friction in the model
 
@@ -99,6 +111,16 @@ class StrengthProfile(object):
         # plt.xlabel("Density [kg/m3]")
         # plt.ylabel("Depth [km]")
         # plt.grid(b=True)
+        # plt.show()
+
+    def calc_k(self):
+        k = []
+        for node in self.nodes:
+            k.append(node.calc_k())
+        # plt.figure()
+        # plt.plot(k, self.z)
+        # plt.ylim([200e3, 20e3])
+        # plt.xlim([0, 10])
         # plt.show()
 
     def calc_viscous(self, strainrate:float):
@@ -121,7 +143,7 @@ class StrengthProfile(object):
         self.ax.grid(b=True)
 
 
-    def draw(self, strainrate:float=1E-14, zmin=20, zmax=200):
+    def draw(self, strainrate:float=1E-14, zmin=20, zmax=150):
         """Calculates strength and plots it against depth"""
         self.calc_viscous(strainrate)
         for i, sv in enumerate(self.sigma_visc):
@@ -136,11 +158,18 @@ class StrengthProfile(object):
 
         mpamax = [val/1E6 for val in self.strengthmax]
         mpamin = [val/1E6 for val in self.strengthmin]
-        self.ax.plot(mpamax, [z/1000 for z in self.z], label=r'$\mu_{max}, \dot{\epsilon}$' + "= {}".format(strainrate))
-        self.ax.plot(mpamin, [z/1000 for z in self.z], label=r'$\mu_{min}, \dot{\epsilon}$' + "= {}".format(strainrate))
+        if self.log:
+            self.ax.semilogx(mpamax, [z/1000 for z in self.z], label=r'$\mu_{max}, \dot{\epsilon}$' + "= {}".format(strainrate))
+        else:
+            self.ax.plot(mpamax, [z/1000 for z in self.z], label=r'$\mu_{max}, \dot{\epsilon}$' + "= {}".format(strainrate))
+
+        # self.ax.plot(mpamin, [z/1000 for z in self.z], label=r'$\mu_{min}, \dot{\epsilon}$' + "= {}".format(strainrate))
 
         self.ax.set_ylim(zmax, zmin)
-        self.ax.set_xlim([-20, 2050])
+        if self.log:
+            self.ax.set_xlim([1E0, 1E4])
+        else:
+            self.ax.set_xlim([0, 2000])
 
     def add_profile(self, strainrate:float):
         """Add the profile for another strainrate """
@@ -153,5 +182,5 @@ class StrengthProfile(object):
     def draw_all(self):
         for e in self.strainrates:
             self.add_profile(e)
-        plt.legend(ncol=2, loc='lower right', fancybox=True)
+        plt.legend(ncol=2, loc='upper right', fancybox=True)
 
