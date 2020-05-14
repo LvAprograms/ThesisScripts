@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 
 class GPE_calculator(object):
-    def __init__(self, modelname, timestep, nx, nz, x_oro:int, x_hinter:int):
+    def __init__(self, modelname, timestep, nx, nz, x_oro:int, x_hinter:int, z_iso=700):
         self.name = modelname       # model name for file naming
         self.dt = timestep          # timestep of output (3 digits, i.e. 001-800)
         self.rho = None             # transposed density matrix from hdf5 file
@@ -14,11 +14,12 @@ class GPE_calculator(object):
         self.x = []                 # horizontal grid
         self.nx = nx                # number of x-nodes
         self.nz = nz                # number of z-nodes
+        self.z_iso = z_iso
         self.P_total = np.zeros((nz-1, nx-1)) # total Pressure matrix
         self.P_mountain = []        # Pressure through mountain
         self.P_ref = []             # Pressure through hinterland
         self.dy = []                # Gridsteps in vertical direction
-        self.fig, [self.ax1, self.ax2] = plt.subplots(1, 2) # axis on which to plot pressure profiles
+        self.fig, [self.ax1, self.ax2, self.ax3] = plt.subplots(1, 3) # axis on which to plot pressure profiles
         self.x_oro = x_oro          # node number of orogen core column
         self.x_hinter = x_hinter    # node number of hinterland
 
@@ -29,6 +30,8 @@ class GPE_calculator(object):
         # print(list(f['VisMarkerGroup'].keys()))
         print(list(dset.keys()))
         rho_tmp = dset['ro']
+        tk_tmp = dset['tk']
+        self.tk = np.reshape(tk_tmp, (self.nx, self.nz)).transpose() - 273
         self.rho = np.reshape(rho_tmp, (self.nx, self.nz)).transpose()
 
     def calculate_grid(self):
@@ -53,42 +56,58 @@ class GPE_calculator(object):
         for i, loc in enumerate(locs):
             P = [0]
             for j in range(1, limit):
-                P.append(P[j - 1] + self.rho[j, loc] * 9.80665 * self.dy[j])
+                if self.z[j] <= self.z_iso+5:
+                    P.append(P[j - 1] - self.rho[j, loc] * 9.80665 * self.dy[j])
+                else:
+                    P.append(0)
 
             self.P_total[:, loc] = P
             self.ax1.plot(P, self.z, label="x-node {}".format(loc))
 
         self.P_mountain = self.P_total[:, self.x_oro]
         self.P_ref = self.P_total[:, self.x_hinter]
-        diff = []
+        diff = []       # Pressure difference at each depth interval
+        GPE = []        # Integral of pressure difference down to each depth interval
         for i in range(len(self.P_ref)):
             diff.append(self.P_mountain[i] - self.P_ref[i])
-        dGPE = sum(diff)
-        print("The total difference in GPE per unit area between orogen and hinterland is {:.4f} GPa".format(dGPE/1e9))
-        self.ax2.plot(diff, self.z)
+            GPE.append(diff[i] * self.z[i])
+        # dGPE = self.z.index()
+        print("The total difference in GPE per unit area down to {} km, between orogen and hinterland is {:.4f} TN/m".format(self.z_iso, max(diff)/1e12))
+        self.ax3.plot(GPE, self.z)
+        self.ax2.plot([val/1E6 for val in diff], self.z)
 
-
-    def label_plot(self, depth=700):
-        self.ax1.set_ylim([depth, 0])
-        self.ax1.set_xlim([0, max(self.P_mountain)])
-        self.ax1.grid(b=True)
-        self.ax2.grid(b=True)
+    def label_plot(self):
+        self.ax1.set_ylim([self.z_iso, 0])
+        self.ax1.set_xlim([0, min(self.P_mountain)])
         self.ax1.set_xlabel("Pressure [Pa]")
         self.ax1.set_ylabel("Depth [km]")
-        self.ax2.set_ylim([depth, 0])
-        self.ax2.set_xlabel(r'$\frac{dP}{dx}(z)$[Pa]')
-        self.ax2.set_ylabel("Depth [km]")
-        self.ax1.set_title(r'$E_{pot}$ at orogen vs hinterland')
-        self.ax2.set_title(r'$E_{pot}$ gradient')
-        plt.suptitle("GPE Model {}".format(self.name))
+        self.ax1.grid(b=True)
+        self.ax1.set_title('Lithostatic pressure at orogen vs hinterland')
         self.ax1.legend()
+
+        self.ax2.set_title(r'Lithostatic pressure difference')
+        self.ax2.set_ylim([self.z_iso, 0])
+        self.ax2.set_xlabel(r'$P_{oro}(z) - P_{ref}(z)$ [MPa]')
+        self.ax2.set_ylabel("Depth [km]")
+        self.ax2.grid(b=True)
+        self.ax2.set_ylabel('Depth [km]')
+
+        self.ax3.set_ylim([self.z_iso, 0])
+        self.ax3.set_xlabel(r'$\int_{z}^{0}(P_{oro} - P_{ref})(z))gdz$ [N/m]')
+        self.ax3.grid(b=True)
+        self.ax3.set_title('GPE difference with depth')
+
+        plt.suptitle("GPE Model {}".format(self.name))
+
         plt.pause(0.001)
 
     def topography(self):
         [XX, ZZ] = np.meshgrid(self.x, [-v + 20 for v in self.z])
         f, ax = plt.subplots()
-        levels = [2600]
-        cp = ax.contour(XX, ZZ, self.rho[0:self.nz-1, 0:self.nx-1], levels)
+        levels = [9, 450, 1300]
+        # cp = ax.contour(XX, ZZ, self.rho[0:self.nz-1, 0:self.nx-1], levels)
+        cp = ax.contour(XX, ZZ, self.tk[0:self.nz-1, 0:self.nx-1], levels)
+
         ax.set_xlabel("Distance [km]")
         ax.set_ylabel("Altitude [km]")
         ax.clabel(cp, inline=False, fontsize=10)
@@ -103,18 +122,15 @@ class GPE_calculator(object):
 
 modelname = "BJ_new"
 
-testGPE = GPE_calculator(modelname, timestep=370, nx=2001, nz=436, x_oro=120, x_hinter=1800)
+testGPE = GPE_calculator(modelname, timestep=370, nx=2001, nz=436, x_oro=120, x_hinter=1800, z_iso=270)
 testGPE.read_data()
 testGPE.calculate_grid()
 testGPE.calc_P()
 testGPE.label_plot()
+# plt.savefig("GPE_{}_t{}.png".format(modelname, testGPE.dt))
+
 testGPE.topography()
 
-
-
-
-
-plt.savefig("GPE_{}_t{}.png".format(modelname, 800))
 plt.savefig("{}_{}_topo_GPElocs.png".format(modelname, testGPE.dt))
 
 plt.show()
