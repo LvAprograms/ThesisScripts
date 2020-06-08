@@ -30,7 +30,7 @@ a2: N = 0 -> x3 = a3. So parabola y-intercept.
 """
 
 class Parabola(object):
-    def __init__(self, n:int, Xs:int, Xe:int, a1:int=0, b1:int=10, b3:int=5):
+    def __init__(self, n:int, Xs:int, Xe:int, a1:float=0, b1:float=10, b3:float=5):
         self.n = n
         self.a1 = a1 # intercept of first line with y-axis, km
         self.b1 = b1 # slope of first line, km/node
@@ -43,7 +43,8 @@ class Parabola(object):
         self.a2 = 0  # y-intercept of the derivative of th parabola
         self.m = self.n
         self.fig, self.ax = plt.subplots()
-        self.maxM = int(floor(self.Xe - self.Xs) / (self.b1 - self.b3)) + 10 # set a limit to the width of the transition zone
+        # self.maxM = int(floor(self.Xe - self.Xs) / (self.b1 - self.b3)) + 10 # set a limit to the width of the transition zone
+        self.maxM = 25
         log.info("Maximum m value allowed is {}".format(self.maxM))
         self.formula = ""
 
@@ -98,6 +99,8 @@ class Parabola(object):
             print("Discriminant D = {}".format(D))
             if self.calc(self.n) == self.Xs:
                 log.info("X2(n) = Xs? True")
+            else:
+                log.info("X2(n) != X1(n) -> X2 = {}\tX1 = {}".format(self.calc(self.n), self.Xs))
             if self.b1 == round(self.b2 + 2 * self.c * self.n):
                 log.info("slope check at node n True")
             if D <= 0:
@@ -113,48 +116,54 @@ class Parabola(object):
                 log.info("X3'(m) = {}, X2'(m) = {}".format(self.b3, 2 * self.c * m + self.b2))
                 self.a3 = self.Xe - self.b3 * m
                 # self.ax.plot([self.n, self.n + 50], [self.a3 + self.b3 * self.n, self.a3 + self.b3 * (self.n+50)], 'k--')
-        best_m = self.n + residuals.index(min(residuals))
+        best_m = self.n + residuals.index(min(residuals)) + 1
         self.m = best_m
+        self.a3 = self.Xe - self.b3 * self.m
+        log.info("a3 = {}".format(self.a3))
         self.parameters_from_m(best_m)
         self.plot(where=range(1,150))
-        print("The minimum residual of {} is found for m = {}".format(min(residuals), best_m))
+        print("The minimum residual of {} is found for m = {}. This means a1 = Xe - b3*m = {}".format(min(residuals), best_m, self.a3))
         return best_m
 
     def write_results(self):
         with open('output.txt', 'w') as f:
-            f.write("node\tXnode\tchange\n")
-            for m in range(self.n, self.m):
-                f.write("{}\t{}\t{}\n".format(m, self.calc(m), self.calc(m) - self.calc(m-1)))
+            f.write("node\tXnode\tchange\tcorrected Xnode\n")
+            for m in range(self.n, self.m+1):
+                f.write("{}\t{:.2f}\t{:.2f}\t{:.2f}\n".format(m, self.calc(m), self.calc(m) - self.calc(m-1), self.calc(m) - (self.calc(self.n) - self.Xs)))
 
     def plot_output(self):
         with open('output.txt', 'r') as f:
             data = f.readlines()
-            x = range(self.n, self.m)
+            x = range(self.n, self.m+1)
             y = [line.split()[1] for line in data]
             del y[0]
             plt.figure()
             plt.plot(x,[float(val) for val in y],'o--')
             plt.xlim([self.n, self.m])
             plt.ylim([self.Xs, self.Xe])
+            plt.xlabel("Node number")
+            plt.ylabel("Parabola Coordinate")
+            plt.grid(b=True)
+            plt.savefig("GT_{}_to_{}.png".format(self.n, self.m))
 
 with open("input.txt", 'r') as f:
     counter = 0
     for line in f:
         if counter > 0:
             # print(line)
-            IN = [int(val) for val in line.split()]
+            IN = line.split()
             break
         else:
             counter += 1
 
-X2 = Parabola(n=IN[0], Xs=IN[1], Xe=IN[2], b1=IN[3], b3=IN[4], a1=IN[5])
+X2 = Parabola(n=int(IN[0]), Xs=int(IN[1]), Xe=int(IN[2]), b1=float(IN[3]), b3=float(IN[4]), a1=float(IN[5]))
 best_m = X2.fit()
 X2.plot_constraints()
 X2.plot(where=range(X2.n, best_m),linetype='-')
 X2.write_results()
 
-plt.xlim([0, 200])
-plt.ylim([0, 1200])
+plt.xlim([X2.n - 50, X2.m+50])
+plt.ylim([X2.Xs - 100, X2.Xe+100])
 plt.plot([X2.n,X2.n],[0,3000],'--', label='N = n')
 plt.plot([0, X2.n + 50], [X2.Xs, X2.Xs],'bd--', label='X = Xs')
 plt.plot([0, X2.n + 50], [X2.Xe, X2.Xe],'rd--', label='X = Xe')
@@ -162,6 +171,7 @@ plt.xlabel("Node number")
 plt.ylabel("X coordinate [km]")
 plt.grid(b=True)
 plt.legend()
+plt.savefig("bestfit_x{}_{}.png".format(X2.Xs, X2.Xe))
 X2.plot_output()
 
 plt.show()
