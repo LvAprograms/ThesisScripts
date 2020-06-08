@@ -3,32 +3,32 @@ from find_x import *
 import h5py as h5
 import numpy as np
 
-COL = 85                # where on the x axis do we want a strength profile
-Lz = 700e3              # Depth of model, m
-nz = 436               # amount of nodes
+COL = 1200                # where on the x axis do we want a strength profile
+Lz = 800e3              # Depth of model, m
+nz = 508               # amount of nodes
 L_sticky = 20e3         # Thickness of sticky air
 L_uc = L_sticky + 20e3  # upper crustal bottom depth
 L_lc = L_uc + 15e3      # lower crustal bottom depth
 L_lm = 100e3            # lithosphere thickness
 L_m = L_lc              # moho depth
-
-modelname = "BL"
+nx = 1648
 # Read the data
-f = h5.File('E:/ThesisData/{}/{}800.gzip.h5'.format(modelname, modelname), 'r')
+modelname = "CW"
+f = h5.File('E:/ThesisData/{}/setup001.gzip.h5'.format(modelname), 'r')
 dset = f['NodeGroup']
-# print(list(f['VisMarkerGroup'].keys()))
+print(list(f['VisMarkerGroup'].keys()))
 print(list(dset.keys()))
 rho_tmp = dset['ro']
 tk_tmp = dset['tk']
 pr_tmp = dset['pr']
-tk_tmp = np.reshape(tk_tmp, (601, 436))
-pr_tmp = np.reshape(pr_tmp, (601, 436))
-rho_tmp = np.reshape(rho_tmp, (601, 436))
-eta_tmp = np.reshape(dset['nu'], (601, 436))
+tk_tmp = np.reshape(tk_tmp, (nx, nz))
+pr_tmp = np.reshape(pr_tmp, (nx, nz))
+rho_tmp = np.reshape(rho_tmp, (nx, nz))
+eta_tmp = np.reshape(dset['nu'], (nx, nz))
 
 # Construct material database for this profile
 database = {}
-with open("rockprops.txt", 'r') as rheology:
+with open("CJ_rocprops.txt", 'r') as rheology:
     rock = "rockless"
     for i, line in enumerate(rheology.readlines()):
         if line.startswith("/"):
@@ -46,8 +46,10 @@ with open("rockprops.txt", 'r') as rheology:
 
 
 materials = {"SA": Material("sticky_air_approximation", database),
-             "UC": Material("dalzilio2018_wet_quartzite", database),
-             "LC": Material("dalzilio2018_mafic_granulite", database),
+             "UC": Material("upper_continental_crust_dalzilio2018_wet_quartzite", database),
+             "LC": Material("lower_continental_crust_dalzilio2018_mafic_granulite", database),
+             "UOC": Material("interface_basalt_wet_quartzite", database),
+             "LOC": Material("lower_oceanic_crust_gabbro_anorthite_75%", database),
              "LM": Material("lithospheric_mantle_dry_olivin", database),
              "AM": Material("astenospheric_mantle_dry_olivin",database)}
 
@@ -101,29 +103,29 @@ for i in range(1, nz):
 
 
 # Visualise variables in 1D
-# vars = [tk_tmp, pr_tmp, rho_tmp, np.log10(eta_tmp)]
-# xlabels = ["Temperature [K]", "Pressure [Pa]", "Density [kg/m3]", r'log$_{10}(\eta_{eff})$']
-# fig, axes = plt.subplots(2,2)
-# plt.suptitle("Visualisation parameters for model {} at x = {}km".format(modelname, find_x(COL)))
-# for i, var in enumerate(vars):
-#     var = var.transpose()
-#     axes.flatten()[i].plot(var[:, COL], [n.z/1000 for n in nodes])
-#     #fig.colorbar(axes.flatten()[i].pcolormesh(var), cmap='hot', ax=axes.flatten()[i])
-#     axes.flatten()[i].invert_yaxis()
-#     axes.flatten()[i].grid(b=True)
-#     axes.flatten()[i].set_xlabel(xlabels[i])
-#     axes.flatten()[i].set_ylabel("Depth [km]")
-#     axes.flatten()[i].set_ylim([250, 0])
-#     # axes.flatten()[i].colorbar()
-# # plt.show()
-# axes.flatten()[2].set_xlim([2700, 3550])
-# # dset = f['VisMarkerGroup']
-# # print(dset['Mtype'])
-#
-# plt.figure()
-# plt.plot([node.material.type for node in nodes], [node.z/1000 for node in nodes],'-')
-# plt.ylim([0, 100])
-# plt.gca().invert_yaxis()
+vars = [tk_tmp, pr_tmp, rho_tmp, np.log10(eta_tmp)]
+xlabels = ["Temperature [K]", "Pressure [Pa]", "Density [kg/m3]", r'log$_{10}(\eta_{eff})$']
+fig, axes = plt.subplots(2,2)
+plt.suptitle("Visualisation parameters for model {} at x = {}km".format(modelname, find_x(COL)))
+for i, var in enumerate(vars):
+    var = var.transpose()
+    axes.flatten()[i].plot(var[:, COL], [n.z/1000 for n in nodes])
+    #fig.colorbar(axes.flatten()[i].pcolormesh(var), cmap='hot', ax=axes.flatten()[i])
+    axes.flatten()[i].invert_yaxis()
+    axes.flatten()[i].grid(b=True)
+    axes.flatten()[i].set_xlabel(xlabels[i])
+    axes.flatten()[i].set_ylabel("Depth [km]")
+    axes.flatten()[i].set_ylim([250, 0])
+    # axes.flatten()[i].colorbar()
+# plt.show()
+axes.flatten()[2].set_xlim([2700, 3550])
+# dset = f['VisMarkerGroup']
+# print(dset['Mtype'])
+
+plt.figure()
+plt.plot([node.material.type for node in nodes], [node.z/1000 for node in nodes],'-')
+plt.ylim([0, 100])
+plt.gca().invert_yaxis()
 
 
 # for rock, data in database.items():
@@ -131,21 +133,20 @@ for i in range(1, nz):
 # print(len(database['sticky_air_approximation']))
 
 
-
-"""
+# """
 for node in nodes:
     node.rho = rho_tmp.transpose()[node.index, COL]
     node.eta_eff = eta_tmp.transpose()[node.index, COL]
     node.P = pr_tmp.transpose()[node.index, COL]
     node.T = tk_tmp.transpose()[node.index, COL]
 # axes[1,1].plot(pr_tmp.transpose()[:, COL], [n.z for n in nodes])
-strprof = StrengthProfile(nodes, materials, [1E-14, 1E-16], log=True)
+strprof = StrengthProfile(nodes, materials, [1E-14, 1E-16], log=False)
 strprof.draw_layering()
 strprof.draw_all()
 # strprof.add_profile(strainrate=1E-16)
 # strprof.add_profile(strainrate=1E-15)
 plt.title("vertical strength profile through x = {} km".format(find_x(COL)))
-"""
+ # """
 plt.show()
 
 

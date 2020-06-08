@@ -1,18 +1,20 @@
 def find_x(node, high_res=False):
     x = 0
+    if node == 1:
+        return x
     dx1 = 10e3
     dx2 = 5e3
-    dx3 = 1e3
+    dx3 = 2e3
     nodes1 = 90
     nodes2 = 110
-    nodes3 = 910
-    nodes4 = 930
+    nodes3 = 460
+    nodes4 = 480
     if high_res:
         dx3 = 400
         nodes3 = 1860
         nodes4 = 2000
     node1 = node
-    while node1 > 0:
+    while node1 > 1:
         if node1 > nodes4:
             x += (node1 - nodes4) * dx1
             node1 -= (node1 - nodes4)
@@ -26,9 +28,9 @@ def find_x(node, high_res=False):
             x += (node1 - nodes1) * dx2
             node1 -= (node1 - nodes1)
         else:
-            x += node1 * dx1
+            x += (node1-1) * dx1
             node1 -= node1
-    print(find_node(x))
+    # print(find_node(x))
     return x/1000
 
 def find_node(x, high_res=False):

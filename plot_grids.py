@@ -40,7 +40,8 @@ def get_steps_from_init_file(file):
 if __name__ == "__main__":
     x = [0]
     y = [0]
-    x_nodes, y_nodes, dx, dy = get_steps_from_init_file(file="../../initfiles/CI_init_ls.t3c")
+    modelname = input("Enter model ID")
+    x_nodes, y_nodes, dx, dy = get_steps_from_init_file(file="../../initfiles/{}_init_ls.t3c".format(modelname))
     with open('x_grid.txt', 'w') as f:
         f.write("Node\tX\n1\t0\n")
         for i in range(1, len(dx)):
@@ -55,16 +56,18 @@ if __name__ == "__main__":
     plottables = [x, dx, y, dy]
     ylabels = ["X coordinate [km]", "X step [km]", "Y coordinate [km]", "Y step [km]"]
     for i in range(len(plottables)):
-        axes[i].plot(x_plottables[i], plottables[i],'o-')
+        # axes[i].plot(x_plottables[i], plottables[i],'o-')
+        axes[i].plot(x_plottables[i], plottables[i])
+
         axes[i].grid(b=True)
         axes[i].set_xlabel('Node number')
         axes[i].set_ylabel(ylabels[i])
-        axes[i].set_xlim([max(x_plottables[i]) -5, max(x_plottables[i]) +5])
-        # axes[i].set_xlim([0, max(x_plottables[i])])
+        # axes[i].set_xlim([max(x_plottables[i]) -5, max(x_plottables[i]) +5])
+        axes[i].set_xlim([0, max(x_plottables[i])])
 
     # axes[2].set_ylim([0, 800])
     # axes[0].set_ylim([700, 900])
     # axes[0].set_xlim([71, 100])
-
+    plt.suptitle("Grid plots for model {}".format(modelname))
     plt.show()
 

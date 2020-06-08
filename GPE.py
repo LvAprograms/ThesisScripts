@@ -27,7 +27,7 @@ class GPE_calculator(object):
         # Read the data using h5py package
         f = h5.File('E:/ThesisData/{}/{}{}.gzip.h5'.format(self.name, self.name, self.dt), 'r')
         dset = f['NodeGroup']
-        # print(list(f['VisMarkerGroup'].keys()))
+        print(list(f['VisMarkerGroup'].keys()))
         print(list(dset.keys()))
         rho_tmp = dset['ro']
         tk_tmp = dset['tk']
