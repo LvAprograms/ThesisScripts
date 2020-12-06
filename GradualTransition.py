@@ -6,7 +6,10 @@ import logging as log
 log.basicConfig(filename='logfile.log',filemode='w', level=log.INFO)
 
 """
-GOAL: find the formula for the change in km/node as a function of node number.
+GOAL: find the formula for the change in km/node as a function of node number. 
+Assume a first linear envelope, a parabolic gradual transition, then a second linear envelope.
+Repeat with different input for the next transition. 
+
 first line:      x1(N) = a1 + b1N
 transition line: x2(N) = a2 + b2N + cN**2
 Third line:      x3(N) = a3 + b3N
@@ -49,8 +52,9 @@ class Parabola(object):
         self.formula = ""
 
     def calc(self, N, dxdn=False):
+        # calculate function output of parabola segment as a function of node number
         if dxdn:
-            return 2*self.c * N + self.b2
+            return 2*self.c * N + self.b2 # derivative of below
         else:
             return self.a2 + self.b2 * N + self.c * N ** 2
 
@@ -69,6 +73,7 @@ class Parabola(object):
         self.ax.plot(x,y, linetype, marker='^', label=self.formula)
 
     def plot_constraints(self):
+        # Visualise in what area the fit must be found
         x = []
         y = []
         for i in range(0, self.n+1, self.n):
@@ -84,6 +89,7 @@ class Parabola(object):
         plt.pause(0.001)
 
     def parameters_from_m(self, m:float):
+        # if the end node of the transition is found (m), calculate the parabola properties
         self.c = (self.b1 - self.b3) / (2 * (self.n - m))
         self.b2 = self.b1 - 2 * self.c * self.n
         self.a2 = self.Xe - self.b2 * m - self.c * m ** 2
@@ -97,6 +103,8 @@ class Parabola(object):
             self.parameters_from_m(m)
             D = self.discriminant()
             print("Discriminant D = {}".format(D))
+
+            # check if constraints are matched
             if self.calc(self.n) == self.Xs:
                 log.info("X2(n) = Xs? True")
             else:
@@ -106,6 +114,7 @@ class Parabola(object):
             if D <= 0:
                 log.warning("Discriminant not larger than zero")
                 pass
+            # get residual as a measure of the fit accuracy
             R = sqrt((self.calc(self.n) - self.Xs) ** 2 + (self.calc(m) - self.Xe) ** 2)
             residuals.append(R)
             log.info("Residual at node n: {}".format(R))
@@ -126,6 +135,7 @@ class Parabola(object):
         return best_m
 
     def write_results(self):
+        # Write resulting nodes and x (or y) at that node and correct for residual.
         with open('output.txt', 'w') as f:
             f.write("node\tXnode\tchange\tcorrected Xnode\n")
             for m in range(self.n, self.m+1):
@@ -146,33 +156,36 @@ class Parabola(object):
             plt.grid(b=True)
             plt.savefig("GT_{}_to_{}.png".format(self.n, self.m))
 
-with open("input.txt", 'r') as f:
-    counter = 0
-    for line in f:
-        if counter > 0:
-            # print(line)
-            IN = line.split()
-            break
-        else:
-            counter += 1
 
-X2 = Parabola(n=int(IN[0]), Xs=int(IN[1]), Xe=int(IN[2]), b1=float(IN[3]), b3=float(IN[4]), a1=float(IN[5]))
-best_m = X2.fit()
-X2.plot_constraints()
-X2.plot(where=range(X2.n, best_m),linetype='-')
-X2.write_results()
 
-plt.xlim([X2.n - 50, X2.m+50])
-plt.ylim([X2.Xs - 100, X2.Xe+100])
-plt.plot([X2.n,X2.n],[0,3000],'--', label='N = n')
-plt.plot([0, X2.n + 50], [X2.Xs, X2.Xs],'bd--', label='X = Xs')
-plt.plot([0, X2.n + 50], [X2.Xe, X2.Xe],'rd--', label='X = Xe')
-plt.xlabel("Node number")
-plt.ylabel("X coordinate [km]")
-plt.grid(b=True)
-plt.legend()
-plt.savefig("bestfit_x{}_{}.png".format(X2.Xs, X2.Xe))
-X2.plot_output()
+if __name__ == "__main__":
+    with open("input.txt", 'r') as f:
+        counter = 0
+        for line in f:
+            if counter > 0:
+                # print(line)
+                IN = line.split()
+                break
+            else:
+                counter += 1
 
-plt.show()
+    X2 = Parabola(n=int(IN[0]), Xs=int(IN[1]), Xe=int(IN[2]), b1=float(IN[3]), b3=float(IN[4]), a1=float(IN[5]))
+    best_m = X2.fit()
+    X2.plot_constraints()
+    X2.plot(where=range(X2.n, best_m),linetype='-')
+    X2.write_results()
+
+    plt.xlim([X2.n - 50, X2.m+50])
+    plt.ylim([X2.Xs - 100, X2.Xe+100])
+    plt.plot([X2.n,X2.n],[0,3000],'--', label='N = n')
+    plt.plot([0, X2.n + 50], [X2.Xs, X2.Xs],'bd--', label='X = Xs')
+    plt.plot([0, X2.n + 50], [X2.Xe, X2.Xe],'rd--', label='X = Xe')
+    plt.xlabel("Node number")
+    plt.ylabel("X coordinate [km]")
+    plt.grid(b=True)
+    plt.legend()
+    plt.savefig("bestfit_x{}_{}.png".format(X2.Xs, X2.Xe))
+    X2.plot_output()
+
+    plt.show()
 

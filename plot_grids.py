@@ -2,6 +2,23 @@ from matplotlib import pyplot as plt
 
 
 def get_steps_from_init_file(file):
+    def parse_grid_line(line, Y=False):
+        split = line.split()
+        if Y:
+            node_start = int(split[3])
+            node_end = int(split[4])
+        else:
+            node_start = int(split[1])
+            node_end = int(split[2])
+
+        delta_node = node_end - node_start
+        first = None
+        if delta_node == 0:
+            first = (node_start,)
+        elif node_end - node_start > 0:
+            first = range(node_start, node_end + 1)
+        return first, float(split[5])
+
     x_nodes = []
     y_nodes = []
     dx = []
@@ -10,29 +27,14 @@ def get_steps_from_init_file(file):
         counter = 0
         for line in f.readlines():
             if line.startswith('X'):
-                # print(line)
-                line = line.split()
-                node_start = int(line[1])
-                node_end = int(line[2])
-                if node_end - node_start == 0:
-                    x_nodes.append(node_start)
-                    dx.append(float(line[5]))
-                elif node_end - node_start > 0:
-                    for i in range(node_start, node_end+1):
-                        x_nodes.append(i)
-                        dx.append(float(line[5]))
+                r = parse_grid_line(line)
+                x_nodes.extend(r[0])
+                [dx.append(r[1]) for _ in r[0]]
             elif line.startswith('Y'):
-                # print(line)
-                line = line.split()
-                node_start = int(line[3])
-                node_end = int(line[4])
-                if node_end - node_start == 0:
-                    y_nodes.append(node_start)
-                    dy.append(float(line[5]))
-                elif node_end - node_start > 0:
-                    for i in range(node_start, node_end+1):
-                        y_nodes.append(i)
-                        dy.append(float(line[5]))
+                r = parse_grid_line(line, Y=True)
+                y_nodes.extend(r[0])
+                [dy.append(r[1]) for _ in r[0]]
+
     return x_nodes, y_nodes, dx,dy
 
 
@@ -56,8 +58,8 @@ if __name__ == "__main__":
     plottables = [x, dx, y, dy]
     ylabels = ["X coordinate [km]", "X step [km]", "Y coordinate [km]", "Y step [km]"]
     for i in range(len(plottables)):
-        # axes[i].plot(x_plottables[i], plottables[i],'o-')
-        axes[i].plot(x_plottables[i], plottables[i])
+        axes[i].plot(x_plottables[i], plottables[i],'o-')
+        # axes[i].plot(x_plottables[i], plottables[i])
 
         axes[i].grid(b=True)
         axes[i].set_xlabel('Node number')
@@ -66,7 +68,7 @@ if __name__ == "__main__":
         axes[i].set_xlim([0, max(x_plottables[i])])
 
     # axes[2].set_ylim([0, 800])
-    # axes[0].set_ylim([700, 900])
+    # axes[0].set_ylim([2300, 2350])
     # axes[0].set_xlim([71, 100])
     plt.suptitle("Grid plots for model {}".format(modelname))
     plt.show()
