@@ -1,4 +1,4 @@
-##ThesisScripts
+## ThesisScripts
 Collection of python scripts used to make figures for thesis/paper.
 Some I used all the time, others were more experimental
 
