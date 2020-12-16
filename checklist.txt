@@ -1,0 +1,7 @@
+Checklist at the end
+1) ysize = 800 km?
+2) Gradual x-Transition 10 km -> 500 m ?
+3) Gradual x-Transition 500 m -> 10 km?
+4) Gradual y-Transition 500 m -> 1 km? 
+5) Gradual y-Transition 1 km -> 5 km?
+6) New rheology?

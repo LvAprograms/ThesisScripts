@@ -1,0 +1,22 @@
+rem usage: in your Windows command line, type: psftp -i .ssh/id_rsa.ppk yourname@eejit.geo.uu.nl -bc -be -b get_zfiles.bat (-be = continue on errors, -bc = display batch commands as they are run, -b = supply a batch script
+cd to/your/Figures/FF
+lcd local\path\to\your\Figures\FF
+mget FF_zsp_eii*
+cd ../FG
+lcd ../FG
+mget FG_zsp_eii*
+cd ../FH
+lcd ../FH
+mget FH_zsp_eii*
+cd ../FQ
+lcd ../FQ
+mget FQ_zsp_eii*
+cd ../FR
+lcd ../FR
+mget FR_zsp_eii*
+cd ../FS
+lcd ../FS
+mget FS_zsp_eii*
+cd ../FT
+lcd ../FT
+mget FT_zsp_eii*
