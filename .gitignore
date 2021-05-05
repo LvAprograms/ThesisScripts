@@ -3,3 +3,7 @@ __pycache__/
 *transitions.txt
 .idea/
 *.log
+eachdt*.txt
+topcoords.txt
+verify_temps.txt
+x_grid.txt
