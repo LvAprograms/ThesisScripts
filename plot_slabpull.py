@@ -35,19 +35,19 @@ def plot_SP_data(model, overlay=False):
         return fig, ax
 
 if __name__ =="__main__":
-    Models = ["ER", "FI", "FJ", "FK"]
+    Models = ["ER", "FI", "FQ"]
     colours = ['r', 'b', 'k', 'g', 'c', 'y']
-    labels = ["610 km ocean", "510 km ocean", "410 km ocean", "310 km ocean"]
-    fig, ax = plot_SP_data("ER", overlay=False)
-    # fig, ax = plt.subplots(2,1)
+    labels = ["ER", "FI", "FQ", "310 km ocean"]
+    # fig, ax = plot_SP_data("ER", overlay=False)
+    fig, ax = plt.subplots(2,1)
     for i, model in enumerate(Models):
         t, SP, A = plot_SP_data(model, overlay=True)
         if model != "ER":
-            ax[0].plot(t, SP,'-', color=colours[i], label=model + ": " + labels[i])
-            ax[1].plot(t, A, '-', color=colours[i], label=model + ": " + labels[i])
+            ax[0].plot(t, SP,'-', color=colours[i], label=model)
+            ax[1].plot(t, A, '-', color=colours[i])
         else:
-            ax[0].plot(t, SP, '-', color=colours[i], marker='*', label=model + ": " + labels[i])
-            ax[1].plot(t, A, '-', color=colours[i], marker='x', label=model + ": " + labels[i])
+            ax[0].plot(t, SP, '-', color=colours[i], marker='*', label=model)
+            ax[1].plot(t, A, '-', color=colours[i], )
     # fig, ax = plot_SP_data("FI", overlay=False)
     # t, SP, A = plot_SP_data("ER", overlay=True)
     # ax[0].plot(t, SP,'g--')
@@ -63,10 +63,10 @@ if __name__ =="__main__":
     ax[1].set_ylim([0, 4e11])
     ax[0].grid(b=True)
     ax[1].grid(b=True)
-    # fig.legend(bbox_to_anchor=(0.5, 0.0), ncol=4, loc='lower center', borderaxespad=0.1, fancybox=True)
-    # plt.subplots_adjust(bottom=0.15)  # place legend below figure
-    # plt.show()
-    # plt.gca().set_axis_off()
+    fig.legend(bbox_to_anchor=(0.5, 0.0), ncol=4, loc='lower center', borderaxespad=0.1, fancybox=True)
+    plt.subplots_adjust(bottom=0.15)  # place legend below figure
+    plt.show()
+    plt.gca().set_axis_off()
     plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
                         hspace=0.2, wspace=0)
     plt.margins(0, 0)
