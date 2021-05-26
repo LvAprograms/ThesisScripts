@@ -23,21 +23,22 @@ class PTtProf(object):
         points = np.arange(0, np.round(max(time), 1), 0.5)
         plotpoints = []
         labeltimes = []
-        # TODO: Optimise this function. Takes up a lot of time. over 12 million calls to abs().
-        for i, point in enumerate(time):
-            err = 100 # starting difference between idealised time vector point and actual time data
-            loc = 0   # location of minimum difference
-            lab = 0   # timestamp of this minimum difference point
-            for p in points:
-                tmp = abs(p - point)
+        # TODO: Optimise this function. Takes up a lot of time. too many calls to abs().
+        loc = 0
+        for i, point in enumerate(points):
+            err = 100
+            j = loc
+            while err > timethreshold:
+                tmp = abs(time[j] - point)
                 if tmp < err:
-                    err = tmp
-                    loc = i
-                    lab = p
-            if loc > 0 and err < timethreshold:
-                plotpoints.append((T[loc], P[loc]))
-                # labeltimes.append(self.i) if self.i not in labeltimes else None
-                labeltimes.append(lab)
+                    err = tmp # starting difference between idealised time vector point and actual time data
+                    loc = j # location of minimum difference
+                    lab = point # timestamp of this minimum difference point
+                    if loc > 0:
+                        plotpoints.append((T[loc], P[loc]))
+                        # labeltimes.append(self.i) if self.i not in labeltimes else None
+                        labeltimes.append(lab)
+                j += 1
         plotpoints = np.array(plotpoints)
         C = ax.scatter(plotpoints[:,0], plotpoints[:,1], marker=MARKERS.pop(0), c=labeltimes, cmap='hot')
 
@@ -89,7 +90,7 @@ class PTtProfManager(object):
 
 
 if __name__=="__main__":
-    PM = PTtProfManager("FI_PTt.log", timethreshold=0.001)
+    PM = PTtProfManager("E:\ThesisData\PAPER\FI_rerun\FI_PTt.log", timethreshold=0.001)
     plt.show()
 
 
