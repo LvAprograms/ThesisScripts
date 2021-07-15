@@ -1,17 +1,18 @@
 from matplotlib import pyplot as plt
 from numpy import array
 from plot_slabpull import *
-BASEPATH = "E:\ThesisData\\"
-MODEL = "FJ"
+BASEPATH = "C:\\Users\\luukv\\Documents\\Studie\\Masters\\Jaar2\\MSc_thesis\\PAPER\\forcedata\\"
+MODEL = "ER"
 
 def read_data(model, file):
     time = []
     data = []
-    with open(BASEPATH + model + '\\{}_MDdata_{}.txt'.format(model, file)) as f:
+    # with open(BASEPATH + model + '\\{}_MDdata_{}.txt'.format(model, file)) as f:
+    with open(BASEPATH + '\\{}_MDdata_{}.txt'.format(model, file)) as f:
         for line in f.readlines():
             line = line.split()
             time.append(float(line[0])/1e6)
-            data.append([float(line[i]) for i in range(1,5)])
+            data.append([float(line[i]) for i in range(1, 5)])
     return time, array(data)
 
 
@@ -21,25 +22,26 @@ def plot_drag(model, ax):
     for file in files:
         time, data = read_data(model, file)
         for i in range(4):
-            ax.plot(time[2:], abs(data[2:, i]), label=model +": "+file+labels[i])
+            ax.plot(time[2:], abs(data[2:, i]), label=model + ": "+file+labels[i])
             # ax.semilogy(time, -data[:,i])
     plt.grid(b=True)
     # ax.set_xlim([0, max(time) + 5])
-    ax.set_xlim([0, 45])
+    ax.set_xlim([0, 56])
     ax.set_ylim([1e9, 4e15])
 
 
 fig, ax = plt.subplots()
-# plot_drag("ER", ax)
+plot_drag("ER", ax)
 # for m in ["ER", "FQ", "FR", "FS", "FT"]:
 #     plot_drag(m, ax)
 #     t, SP, A = plot_SP_data(m, overlay=True)
 #     ax.semilogy(t, abs(array(SP)),'m--', label="Slab Pull")
-plot_drag(MODEL, ax)
+# plot_drag(MODEL, ax)
 t, SP, A = plot_SP_data(MODEL, overlay=True)
 ax.semilogy(t, abs(array(SP)),'m--', label="Slab Pull")
 ax.set_xlabel("Time [Myr]")
 ax.set_ylabel("Mantle drag force magnitude[N/m]")
 # ax.set_xlim([0, 10])
 plt.legend(loc='lower right')
-plt.show()
+# plt.show()
+plt.savefig("C:\\Users\luukv\\Documents\\Studie\\Masters\\Jaar2\\MSc_thesis\\PAPER\\modelfigs\\forces\\{}_forces.png".format(MODEL))

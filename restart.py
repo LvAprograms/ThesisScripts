@@ -128,7 +128,7 @@ echo "Running on $SLURM_NNODES nodes."
 echo "Running on $SLURM_NPROCS processors."
 echo "Current working directory is `pwd`"
 
-#srun ./in2stm
+srun ./in2stm
 echo "  submitting the first job: `date` "
 srun ./i2stm
 echo "  first job finished: `date` "

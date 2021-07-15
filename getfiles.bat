@@ -1,47 +1,34 @@
 rem usage: in your Windows command line, type: psftp -i .ssh/id_rsa.ppk yourname@eejit.geo.uu.nl -bc -be -b get_zfiles.bat (-be = continue on errors, -bc = display batch commands as they are run, -b = supply a batch script
 rem this particular file is for the output of ForceAnalysis.m
-cd /scratch/tectonics/$USER/STM/low_res/EW/src
-lcd where\to\store\the\data
-mget EW_*.txt
-cd ../../EY/src
-lcd ../EY
-mget EY_*.txt
-cd ../../FB/src
-lcd ../FB
-mget FB_*.txt
-cd ../../FD/src
-lcd ../FD
-mget FD_*.txt
-cd ../../FE/src
-lcd ../FE
-mget FE_*.txt
-cd ../../FF/src
-lcd ../FF
-mget FF_*.txt
-cd ../../FG/src
-lcd ../FG
-mget FG_*.txt
-cd ../../FH/src
-lcd ../FH
-mget FH_*.txt
-cd ../../FI/src
-lcd ../FI
-mget FI_*.txt
-cd ../../FJ/src
-lcd ../FJ
-mget FJ_*.txt
-cd ../../FK/src
-lcd ../FK
-mget FK_*.txt
-cd ../../FM/src
-lcd ../FM
-mget FM_*.txt
-cd ../../FN/src
-lcd ../FN
-mget FN_*.txt
-cd ../../FV/src
-lcd ../FV
-mget FV_*.txt
-cd ../../FW/src
-lcd ../FW
-mget FW_*.txt
+cd /scratch/tectonics/agtmaal/STM/low_res/PAPER/ER_rerun
+lcd "C:\\Users\\Luuk van Agtmaal\\Documents\\Studie\\Masters\\Jaar2\\MSc_thesis\\initfiles
+put ER_init_ls init_ls.t3c
+cd ../FI_rerun/
+
+put FI_init_ls init_ls.t3c
+cd ../FJ_rerun/
+
+put FJ_init_ls init_ls.t3c
+cd ../FK_rerun/
+
+put FK_init_ls init_ls.t3c
+cd ../FP_rerun/
+
+put FP_init_ls init_ls.t3c
+cd ../FQ_rerun/
+
+put FQ_init_ls init_ls.t3c
+cd ../FR_rerun/
+
+put FR_init_ls init_ls.t3c
+cd ../FS_rerun/
+
+put FS_init_ls init_ls.t3c
+cd ../FT_rerun/
+
+put FT_init_ls init_ls.t3c
+cd ../FX_rerun/
+
+put FX_init_ls init_ls.t3c
+
+

@@ -7,3 +7,6 @@ eachdt*.txt
 topcoords.txt
 verify_temps.txt
 x_grid.txt
+*rocprops.txt
+*.bat
+Istvan*
