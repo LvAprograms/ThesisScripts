@@ -17,7 +17,7 @@ class ForceCalculator(object):
 
     def read_data(self):
         # Read the data using h5py package
-        f = h5.File('E:/ThesisData/{}/{}{}.gzip.h5'.format(self.name, self.name, self.dt), 'r')
+        f = h5.File('C:\\Users\\luukv\\Documents\\ThesisData\\{}/{}{}.gzip.h5'.format(self.name, self.name, self.dt), 'r')
         dset = f['NodeGroup']
         print(list(f['VisMarkerGroup'].keys()))
         print(list(dset.keys()))

@@ -100,9 +100,9 @@ class GPE_calculator(ForceCalculator):
         # f.colorbar(cp)
 
 
-modelname = "FT"
+modelname = "FI"
 
-testGPE = GPE_calculator(modelname, timestep=800, nx=1785, nz=509, x_oro=250, x_hinter=1400, z_iso=270)
+testGPE = GPE_calculator(modelname, timestep=450, nx=1785, nz=509, x_oro=250, x_hinter=1400, z_iso=270)
 testGPE.read_data()
 testGPE.calculate_grid()
 # testGPE.calc_P()
@@ -112,5 +112,5 @@ testGPE.calculate_grid()
 testGPE.topography(testGPE.x_oro, testGPE.x_hinter)
 
 # plt.savefig("{}_{}_topo_GPElocs.png".format(modelname, testGPE.dt))
-
-plt.show()
+plt.savefig("C:\\Users\\luukv\\Documents\\Studie\\Masters\\Jaar2\\MSc_thesis\\PAPER\\Figures_Frontiers\\{}_topo_{}.png".format(testGPE.name, testGPE.dt), dpi=300)
+# plt.show()
